@@ -1,78 +1,119 @@
-import axios from "axios";
-import type { AxiosInstance } from "axios";
-import dotenv from "dotenv";
+// import axios from "axios";
+// import type { AxiosInstance } from "axios";
+// import dotenv from "dotenv";
 
-dotenv.config();
+// dotenv.config();
 
-console.log("WP_BASE_URL:", process.env.WP_BASE_URL);
-console.log("WP_USERNAME:", process.env.WP_USERNAME);
-console.log(
-  "WP_APP_PASSWORD:",
-  process.env.WP_APP_PASSWORD ? "LOADED" : "MISSING"
-);
+// console.log("WP_BASE_URL:", process.env.WP_BASE_URL);
+// console.log("WP_USERNAME:", process.env.WP_USERNAME);
+// console.log(
+//   "WP_APP_PASSWORD:",
+//   process.env.WP_APP_PASSWORD ? "LOADED" : "MISSING"
+// );
 
-class WordPressClient {
-  private client: AxiosInstance;
+// class WordPressClient {
+//   private client: AxiosInstance;
 
-  constructor() {
-    const baseURL = process.env.WP_BASE_URL;
-    const username = process.env.WP_USERNAME;
-    const appPassword = process.env.WP_APP_PASSWORD;
+//   constructor() {
+//     const baseURL = process.env.WP_BASE_URL;
+//     const username = process.env.WP_USERNAME;
+//     const appPassword = process.env.WP_APP_PASSWORD;
 
-    if (!baseURL || !username || !appPassword) {
-      throw new Error(
-        "WordPress environment variables are missing"
-      );
-    }
+//     if (!baseURL || !username || !appPassword) {
+//       throw new Error(
+//         "WordPress environment variables are missing"
+//       );
+//     }
 
-    this.client = axios.create({
-      baseURL: `${baseURL}/wp-json`,
-      auth: {
-        username,
-        password: appPassword,
-      },
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
+//     this.client = axios.create({
+//       baseURL: `${baseURL}/wp-json`,
+//       auth: {
+//         username,
+//         password: appPassword,
+//       },
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//     });
+//   }
 
-  async healthCheck() {
-    const response = await this.client.get("/wp/v2/users/me");
+//   async healthCheck() {
+//     const response = await this.client.get("/wp/v2/users/me");
 
-    return {
-      success: true,
-      user: response.data,
-    };
-  }
-
-
-                        async getPosts() {
-                        const response = await this.client.get("/wp/v2/posts", {
-                            params: {
-                            per_page: 5,
-                            },
-                        });
-
-                        return response.data;
-    }
+//     return {
+//       success: true,
+//       user: response.data,
+//     };
+//   }
 
 
-    async getPostTypes() {
-  const response = await this.client.get("/wp/v2/types");
+//        async getPosts() {
+//        const response = await this.client.get("/wp/v2/posts", {
+//            params: {
+//            per_page: 5,
+//            },
+//        });
 
-  return response.data;
-}
-
-async getApiRoot() {
-  const response = await this.client.get("/");
-
-  return response.data;
-}
-}
+//         return response.data;
+//     }
 
 
+// //     async getInsights() {
+// //   const response = await this.client.get("/wp/v2/insights", {
+// //     params: {
+// //       per_page: 5,
+// //     },
+// //   });
+
+// //   return response.data;
+// // }
 
 
-export default new WordPressClient();
+// async getInsights() {
+//   const response = await this.client.get("/wp/v2/resources", {
+//     params: {
+//       per_page: 10,
+//     },
+//     validateStatus: () => true,
+//   });
+
+
+//   // temporary debug code for wordpress insights API issues
+
+//   // console.log("========== WORDPRESS INSIGHTS DEBUG ==========");
+//   // console.log("STATUS:", response.status);
+//   // console.log("CONTENT-TYPE:", response.headers["content-type"]);
+//   // console.log("FINAL URL:", response.request?.res?.responseUrl);
+
+
+//   //  console.log("DATA TYPE:", typeof response.data);
+
+//   // if (typeof response.data === "string") {
+//   //   console.log("FIRST 300 CHARACTERS:");
+//   //   console.log(response.data.substring(0, 300));
+//   // }
+
+//   // console.log("==============================================");
+
+//   return response.data;
+// }
+
+
+//     async getPostTypes() {
+//   const response = await this.client.get("/wp/v2/types");
+
+//   return response.data;
+// }
+
+// async getApiRoot() {
+//   const response = await this.client.get("/");
+
+//   return response.data;
+// }
+// }
+
+
+
+
+// export default new WordPressClient();
 
