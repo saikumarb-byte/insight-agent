@@ -3,6 +3,8 @@ import {
   validateDriveFolder,
 } from "../google-drive/drive.service.js";
 import type { DriveAsset, DriveScanResult } from "../google-drive/drive.types.js";
+import { ensureConvertedImage } from "../utils/image.processor.js";
+import { slugify } from "../utils/slugify.js";
 
 const MOBILE_KEYWORDS = [
   "mobile",
@@ -61,6 +63,15 @@ function normalizeName(name: string): string {
 
 function getImageVariantConfig(assetType: DriveAsset["type"], fileName: string) {
   const lower = normalizeName(fileName);
+
+  if (/featured|feature|opengraph|og-image/.test(lower)) {
+    return {
+      convertedFormat: "webp" as const,
+      convertedDimensions: "760x480",
+      outputLabel: "Featured image",
+      targetFileName: fileName.replace(/\.[^.]+$/, ".webp"),
+    };
+  }
 
   if (assetType === "desktopBanner") {
     return {
@@ -135,6 +146,10 @@ function classifyAsset(fileName: string): {
   confidence: number;
 } {
   const lower = normalizeName(fileName);
+
+  if (/featured|feature|opengraph|og-image/i.test(lower)) {
+    return { type: "desktopBanner", match: "Featured banner detected", confidence: 95 };
+  }
 
   if (/author|profile|bio|about|person/.test(lower)) {
     return { type: "other", match: "Author asset detected", confidence: 92 };
@@ -218,6 +233,54 @@ class DriveAgent {
 
       return enriched;
     });
+
+    // Assign SEO-friendly, deterministic filenames using fileId and dimensions
+    for (const asset of assets) {
+      if (asset.convertedFormat && asset.mimeType && asset.mimeType.startsWith("image/")) {
+        const baseName = (asset.name ?? asset.id ?? "asset").replace(/\.[^.]+$/, "");
+        let slug = slugify(baseName) || "asset";
+        if (slug.length > 60) slug = slug.slice(0, 60);
+        const idPartRaw = (asset.fileId ?? asset.id ?? "unknown").toString();
+        const shortId = idPartRaw.slice(-6).replace(/[^a-zA-Z0-9]/g, "");
+        const dims = (asset.convertedDimensions ?? "orig").toString().toLowerCase().replace(/[^a-z0-9x]/g, "");
+        // SEO-friendly: slug + optional short id + dims
+        asset.targetFileName = `${slug}${shortId ? `-${shortId}` : ""}-${dims}.webp`;
+      }
+    }
+
+    // Convert image assets or provide on-demand proxy URLs depending on STORE_ASSETS
+    const storeAssets = process.env.STORE_ASSETS !== "false";
+
+    if (storeAssets) {
+      await Promise.all(assets.map(async (asset) => {
+        if (asset.convertedFormat && asset.targetFileName && asset.downloadUrl && asset.mimeType && asset.mimeType.startsWith("image/")) {
+          try {
+            const localUrl = await ensureConvertedImage(asset.downloadUrl, asset.targetFileName, asset.convertedDimensions);
+            asset.previewUrl = localUrl;
+            asset.downloadUrl = localUrl;
+          } catch {
+            // leave original URLs on failure
+          }
+        }
+      }));
+    } else {
+      const serverBase = process.env.SERVER_BASE_URL ?? `http://localhost:${process.env.PORT ?? 3000}`;
+      for (const asset of assets) {
+        if (asset.convertedFormat && asset.targetFileName && asset.downloadUrl && asset.mimeType && asset.mimeType.startsWith("image/")) {
+          const proxyUrl = `${serverBase}/api/insights/asset?url=${encodeURIComponent(asset.downloadUrl)}&dims=${encodeURIComponent(asset.convertedDimensions ?? "")}`;
+          asset.previewUrl = proxyUrl;
+          asset.downloadUrl = proxyUrl;
+        }
+      }
+    }
+
+    // Update asset metadata so frontend shows converted files directly
+    for (const asset of assets) {
+      if (asset.targetFileName && asset.convertedFormat === "webp" && asset.mimeType && asset.mimeType.startsWith("image/")) {
+        asset.name = asset.targetFileName;
+        asset.mimeType = "image/webp";
+      }
+    }
 
     const authorImage = assets.find((asset) => /author|profile|bio|about|person/.test(normalizeName(asset.name))) ?? null;
     const authorDescription = assets.find((asset) => /author|profile|bio|about|description/.test(normalizeName(asset.name)) && (asset.type === "doc" || asset.type === "pdf")) ?? null;

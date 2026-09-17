@@ -1,11 +1,16 @@
 import "dotenv/config";
 import express from "express";
+import path from "path";
 // import wordpressRoutes from "./routes/wordpress.routes.js";
 import insightsRoutes from "./routes/insights.routes.js";
 
 const app = express();
 
 app.use(express.json());
+
+// Serve converted images
+const assetsPath = path.join(process.cwd(), "public", "assets");
+app.use("/assets", express.static(assetsPath));
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
