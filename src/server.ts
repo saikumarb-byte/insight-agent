@@ -1,12 +1,21 @@
 import "dotenv/config";
 import express from "express";
 import path from "path";
+import cors from "cors";
 // import wordpressRoutes from "./routes/wordpress.routes.js";
 import insightsRoutes from "./routes/insights.routes.js";
 
 const app = express();
 
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Serve converted images
 const assetsPath = path.join(process.cwd(), "public", "assets");

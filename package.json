@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/saikumarb-byte/insight-agent#readme",
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.5.0",
     "nodemon": "^3.1.14",
@@ -33,6 +34,7 @@
   },
   "dependencies": {
     "axios": "^1.20.0",
+    "cors": "^2.8.5",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "sharp": "^0.32.0"
