@@ -8,10 +8,11 @@ In addition, Insight Agent includes a lightweight WordPress REST API integration
 
 ## Quick Overview
 
-- **Tech Stack**: Node.js (ES2022 / NodeNext), TypeScript, Express, Sharp, Axios, Cors, Dotenv
+- **Tech Stack**: Node.js (ES2022 / NodeNext), TypeScript, Express, Sharp, unpdf, Axios, Cors, Dotenv
 - **Key Capabilities**:
   - **Drive Asset Ingestion**: Scans Google Drive folders via Google Drive API v3 to discover media and document assets.
-  - **Automated Classification**: Heuristic classification of assets into desktop banners, mobile banners, content images, doc drafts, PDFs, and author photos.
+  - **Open-Source PDF Reference Intelligence**: Downloads the reference PDF from Google Drive and uses `unpdf` to extract the real Insight Title, Author Name/Bio, Section Headings, and Figure captions.
+  - **Smart Asset Placement Mapping**: Intelligently assigns each image to its exact placement slot (`heroBanner`, `mobileBanner`, `author`, `section-1`, `section-2`, etc.) based on visual aspect ratios and PDF section context.
   - **Image Processing Pipeline**: Converts images to WebP with dimensions tailored for web display, generating SEO-friendly slugified file names.
   - **Dual Delivery Modes**: Supports persistent local asset storage (`public/assets`) and on-demand proxy streaming with in-memory LRU caching.
   - **WordPress Integration**: Proxy and helper endpoints for WordPress REST API access.
@@ -236,19 +237,19 @@ curl http://localhost:3000/api/wordpress/api-root
 
 ---
 
-## Asset Classification & Optimization Specifications
+## Asset Classification & Placement Specifications
 
-When scanning Google Drive folders, files are heuristically classified and optimized into WebP variants:
+When scanning Google Drive folders, the backend reads the reference PDF using `unpdf` and inspects image dimensions using `sharp` to assign each asset to an explicit placement slot:
 
-| Category | File Keywords / Patterns | Output Format | Target Dimensions | Output Label |
-| :--- | :--- | :--- | :--- | :--- |
-| **Desktop Banner** | `desktop`, `hero`, `banner`, `wide`, `header`, `landing`, `featured` | `webp` | `1440x500` | Desktop banner |
-| **Mobile Banner** | `mobile`, `phone`, `smartphone`, `responsive` | `webp` | `750x1050` | Mobile banner |
-| **Featured / Thumbnail** | `featured`, `thumbnail`, `cover`, `opengraph`, `og-image` | `webp` | `760x480` | Featured / Thumbnail |
-| **Author Image** | `author`, `profile`, `bio`, `about`, `person` | `webp` | `500x500` | Author image |
-| **Content Image** | General `.png`, `.jpg`, `.jpeg`, `.webp`, illustrations, diagrams | `webp` | `500xauto` | Inner image |
-| **Document** | `.docx`, `.doc`, `notes`, `brief`, `summary`, `metadata`, `guide` | Original format | N/A | Support document |
-| **PDF** | `.pdf`, `reference`, `final`, `whitepaper`, `case-study` | Original format | N/A | Reference PDF |
+| Category | Placement Slot | Aspect Ratio & Rules | Output Format | Target Dimensions | Output Label |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Desktop Banner** | `hero` | Wide panoramic ratio ($\ge 1.6$), keywords (`hero`, `banner`, `desktop`) | `webp` | `1440x500` | Desktop banner |
+| **Mobile Banner** | `mobile` | Vertical portrait ratio ($\le 0.85$), keywords (`mobile`, `phone`, `responsive`) | `webp` | `750x1050` | Mobile banner |
+| **Author Image** | `author` | Square ratio ($\approx 1.0$) or matching author name / keywords | `webp` | `500x500` | Author image |
+| **Content Image** | `section-1`, `section-2`, ... | Inlined sequentially across extracted document sections & figure captions | `webp` | `500xauto` | Inner image |
+| **Featured / Thumbnail** | `thumbnail` | Ratio $\approx 1.58$, keywords (`featured`, `thumbnail`, `cover`) | `webp` | `760x480` | Featured / Thumbnail |
+| **Document** | `draft-doc` | `.docx`, `.doc`, `notes`, `brief`, `metadata` | Original | N/A | Editorial draft |
+| **Reference PDF** | `reference-pdf`| `.pdf`, analyzed for Title, Author, Sections, and Figures | Original | N/A | Reference PDF |
 
 ---
 
@@ -260,10 +261,11 @@ When scanning Google Drive folders, files are heuristically classified and optim
 - [src/routes/insights.routes.ts](src/routes/insights.routes.ts): Active router exposing health check, Drive validation, Drive scanning, and the on-demand WebP conversion proxy
 - [src/routes/wordpress.routes.ts](src/routes/wordpress.routes.ts): Router exposing the WordPress endpoints
 - [src/agents/insight.agent.ts](src/agents/insight.agent.ts): Agent orchestrating Drive scan analysis and category mapping
-- [src/agents/drive.agent.ts](src/agents/drive.agent.ts): Drive agent handling URL validation, asset heuristic classification, SEO filename generation, and image conversion
+- [src/agents/drive.agent.ts](src/agents/drive.agent.ts): Drive agent handling URL validation, PDF download & intelligence analysis, visual aspect ratio inspection, and image conversion
 - [src/google-drive/drive.service.ts](src/google-drive/drive.service.ts): Google Drive API v3 queries, file listing, URL parsing, and asset mapping
 - [src/google-drive/drive.types.ts](src/google-drive/drive.types.ts): TypeScript types for assets, categories, and scan results
-- [src/utils/image.processor.ts](src/utils/image.processor.ts): Sharp-based image processor for downloading, resizing, and converting images to WebP
+- [src/utils/pdf.analyzer.ts](src/utils/pdf.analyzer.ts): 100% open-source PDF parser (`unpdf`) extracting Insight Title, Author, Section Headings, Figure Captions, and assigning asset placements
+- [src/utils/image.processor.ts](src/utils/image.processor.ts): Sharp-based image processor for downloading, dimension calculation, and WebP conversion
 - [src/utils/slugify.ts](src/utils/slugify.ts): Generates SEO-friendly slugs for processed assets
 - [src/utils/cleanupAssets.ts](src/utils/cleanupAssets.ts): Script to clear generated images from `public/assets/`
 - [src/wordpress/wordpress.client.ts](src/wordpress/wordpress.client.ts): Axios-based WordPress client (reads `WP_BASE_URL`, `WP_USERNAME`, `WP_APP_PASSWORD`)

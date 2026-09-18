@@ -8,6 +8,7 @@ const emptyCategories: AssetCategoryMap = {
   doc: [],
   pdf: [],
   other: [],
+  featuredAndOpenGraph: [],
 };
 
 function normalizeDriveId(rawUrl: string): string | null {
@@ -88,7 +89,7 @@ const sampleAssets: DriveAsset[] = [
     convertedFormat: "webp",
     convertedDimensions: "1440x500",
     outputLabel: "Desktop banner",
-    targetFileName: "desktop-banner-hero.webp",
+    targetFileName: "desktop-banner-hero-db.webp",
   },
   {
     id: "mobile-banner-hero",
@@ -105,7 +106,7 @@ const sampleAssets: DriveAsset[] = [
     convertedFormat: "webp",
     convertedDimensions: "750x1050",
     outputLabel: "Mobile banner",
-    targetFileName: "mobile-banner-hero.webp",
+    targetFileName: "mobile-banner-hero-mb.webp",
   },
   {
     id: "featured-article-thumbnail",
@@ -122,7 +123,7 @@ const sampleAssets: DriveAsset[] = [
     convertedFormat: "webp",
     convertedDimensions: "760x480",
     outputLabel: "Thumbnail image",
-    targetFileName: "featured-article-thumbnail.webp",
+    targetFileName: "featured-article-thumbnail-fb.webp",
   },
   {
     id: "automation-workflow",
@@ -139,7 +140,7 @@ const sampleAssets: DriveAsset[] = [
     convertedFormat: "webp",
     convertedDimensions: "500xauto",
     outputLabel: "Inner image",
-    targetFileName: "automation-workflow.webp",
+    targetFileName: "automation-workflow-ib-1.webp",
   },
   {
     id: "architecture-diagram",
@@ -156,7 +157,7 @@ const sampleAssets: DriveAsset[] = [
     convertedFormat: "webp",
     convertedDimensions: "500xauto",
     outputLabel: "Inner image",
-    targetFileName: "architecture-diagram.webp",
+    targetFileName: "architecture-diagram-ib-1.webp",
   },
   {
     id: "resource-source",
@@ -195,7 +196,7 @@ const sampleAssets: DriveAsset[] = [
     convertedFormat: "webp",
     convertedDimensions: "500x500",
     outputLabel: "Author image",
-    targetFileName: "author-portrait.webp",
+    targetFileName: "author-portrait-author.webp",
     fileId: "author-portrait",
     mimeType: "image/jpeg",
     previewUrl: "https://drive.google.com/uc?export=view&id=author-portrait",

@@ -18,6 +18,7 @@ class InsightAgent {
         doc: result.categories.doc.map((asset) => ({ ...asset, name: asset.name })),
         pdf: result.categories.pdf.map((asset) => ({ ...asset, name: asset.name })),
         other: result.categories.other.map((asset) => ({ ...asset, name: asset.name })),
+        featuredAndOpenGraph: result.categories.featuredAndOpenGraph?.map((asset) => ({ ...asset, name: asset.name })) ?? [],
       },
     };
   }

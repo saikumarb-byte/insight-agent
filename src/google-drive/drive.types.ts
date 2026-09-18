@@ -23,11 +23,23 @@ export interface DriveAsset {
   convertedDimensions?: string;
   outputLabel?: string;
   targetFileName?: string;
+  aspectRatio?: number;
+  placement?: string;
+  placementSlot?: string;
+  placementReason?: string;
   authorName?: string;
   displayLabel?: string;
 }
 
-export type AssetCategoryMap = Record<AssetType, DriveAsset[]>;
+export interface AssetCategoryMap {
+  desktopBanner: DriveAsset[];
+  mobileBanner: DriveAsset[];
+  contentImage: DriveAsset[];
+  doc: DriveAsset[];
+  pdf: DriveAsset[];
+  other: DriveAsset[];
+  featuredAndOpenGraph: DriveAsset[];
+}
 
 export interface DriveValidationResult {
   isValid: boolean;
